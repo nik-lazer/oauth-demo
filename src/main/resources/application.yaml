@@ -6,3 +6,6 @@ spring:
           github:
             clientId: ${demo.oauth.github.clientId}
             clientSecret: ${demo.oauth.github.secret}
+          google:
+            clientId: ${demo.oauth.google.clientId}
+            clientSecret: ${demo.oauth.google.secret}
