@@ -9,3 +9,25 @@ spring:
           google:
             clientId: ${demo.oauth.google.clientId}
             clientSecret: ${demo.oauth.google.secret}
+          azure:
+            client-id: ${demo.oauth.azure.clientId}
+            client-secret: ${demo.oauth.azure.secret}
+            client-authentication-method: POST
+            authorization-grant-type: authorization_code
+            client-name: Azure
+            provider: azure
+            scope:
+              - ${demo.oauth.azure.scope}
+              - email
+              - openid
+              - profile
+        provider:
+          azure:
+            authorization-uri: ${demo.oauth2.azure.idp-url}/oauth2/v2.0/authorize
+            token-uri: ${demo.oauth2.azure.idp-url}/oauth2/v2.0/token
+            issuer-uri: ${demo.oauth2.azure.idp-url}/v2.0
+            jwk-set-uri: ${demo.oauth2.azure.idp-url}/discovery/v2.0/keys
+demo:
+  oauth2:
+    azure:
+      idp-url: https://login.microsoftonline.com/${demo.oauth.azure.tenant}
