@@ -1,5 +1,7 @@
 package lan.test.oauth.oauthdemo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -16,22 +18,28 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction.oauth2AuthorizedClient;
 
 @Configuration
 public class SecurityConfig {
+    private static final Logger logger = LoggerFactory.getLogger(WebClient.class);
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         SimpleUrlAuthenticationFailureHandler handler = new SimpleUrlAuthenticationFailureHandler("/");
 
         http
                 .authorizeRequests(a -> a
-                        .antMatchers("/health", "/", "/error", "/webjars/**").permitAll()
+                        .antMatchers("/", "/error", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .logout(l -> l
@@ -65,6 +73,9 @@ public class SecurityConfig {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2 =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(clients, authz);
         return WebClient.builder()
+                .filters(exchangeFilterFunctions -> {
+                    exchangeFilterFunctions.add(logResponse());
+                })
                 .filter(oauth2).build();
     }
 
@@ -88,4 +99,19 @@ public class SecurityConfig {
         };
     }
 
+    ExchangeFilterFunction logResponse() {
+        return ExchangeFilterFunction.ofResponseProcessor(clientResponse -> {
+            logger.info("STATUS: {}", clientResponse.statusCode());
+            if (clientResponse.statusCode() != HttpStatus.OK) {
+                logger.info("BODY {}", clientResponse.bodyToMono(String.class).block(Duration.ofSeconds(1)));
+            }
+            var headers = clientResponse
+                    .headers().asHttpHeaders()
+                    .entrySet().stream()
+                    .map(entry -> "HEADER:" + entry.getKey() + " = " + String.join(",", entry.getValue()))
+                    .collect(Collectors.joining("\n"));
+            logger.info("Request: {}", headers);
+            return Mono.just(clientResponse);
+        });
+    }
 }

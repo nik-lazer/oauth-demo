@@ -13,73 +13,77 @@
     <script type="text/javascript" src="/webjars/js-cookie/js.cookie.js"></script>
 </head>
 <body>
-    <h1>Login</h1>
-        <div class="container unauthenticated">
-            With GitHub: <a href="/oauth2/authorization/github">click here</a>
-        </div>
-        <div class="container unauthenticated">
-            With Google: <a href="/oauth2/authorization/google">click here</a>
-        </div>
-        <div class="container unauthenticated">
-            With Azure: <a href="/oauth2/authorization/azure">click here</a>
-        </div>
-    <div class="container authenticated" style="display: none">
-        Logged in as: <span id="user"></span>
-        <div>
-            <button onClick="logout()" class="btn btn-primary">Logout</button>
-        </div>
+<h1>Login</h1>
+<div class="container unauthenticated">
+    With GitHub: <a href="/oauth2/authorization/github">click here</a>
+</div>
+<div class="container unauthenticated">
+    With Google: <a href="/oauth2/authorization/google">click here</a>
+</div>
+<div class="container unauthenticated">
+    With Azure: <a href="/oauth2/authorization/azure">click here</a>
+</div>
+<div class="container authenticated" style="display: none">
+    Logged in as: <span id="user"></span>
+    <div>
+        <a id="call" href="#">Call service</a>
     </div>
-    <div class="container text-danger error"></div>
-    <script type="text/javascript">
-        $.get("/user", function (data) {
-            $("#user").html(data.name);
-            $(".unauthenticated").hide()
-            $(".authenticated").show()
-        });
-        $.ajaxSetup({
-            beforeSend : function(xhr, settings) {
-                if (settings.type == 'POST' || settings.type == 'PUT'
-                    || settings.type == 'DELETE') {
-                    if (!(/^http:.*/.test(settings.url) || /^https:.*/
-                        .test(settings.url))) {
-                        // Only send the token to relative URLs i.e. locally.
-                        xhr.setRequestHeader("X-XSRF-TOKEN",
-                            Cookies.get('XSRF-TOKEN'));
-                    }
+    <div>
+        <button onClick="logout()" class="btn btn-primary">Logout</button>
+    </div>
+</div>
+<div class="container text-danger error"></div>
+<script type="text/javascript">
+    $.get("/user", function (data) {
+        $("#user").html(data.name);
+        $("#call").attr("href", "/call/"+data.provider);
+        $(".unauthenticated").hide()
+        $(".authenticated").show()
+    });
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (settings.type == 'POST' || settings.type == 'PUT'
+                || settings.type == 'DELETE') {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/
+                    .test(settings.url))) {
+                    // Only send the token to relative URLs i.e. locally.
+                    xhr.setRequestHeader("X-XSRF-TOKEN",
+                        Cookies.get('XSRF-TOKEN'));
                 }
             }
-        });
-
-        var logout = function() {
-            $.post("/logout", function() {
-                $("#user").html('');
-                $(".unauthenticated").show();
-                $(".authenticated").hide();
-            })
-            return true;
         }
+    });
 
-        $.ajaxSetup({
-            beforeSend : function(xhr, settings) {
-                if (settings.type == 'POST' || settings.type == 'PUT'
-                    || settings.type == 'DELETE') {
-                    if (!(/^http:.*/.test(settings.url) || /^https:.*/
-                        .test(settings.url))) {
-                        // Only send the token to relative URLs i.e. locally.
-                        xhr.setRequestHeader("X-XSRF-TOKEN",
-                            Cookies.get('XSRF-TOKEN'));
-                    }
+    var logout = function () {
+        $.post("/logout", function () {
+            $("#user").html('');
+            $(".unauthenticated").show();
+            $(".authenticated").hide();
+        })
+        return true;
+    }
+
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (settings.type == 'POST' || settings.type == 'PUT'
+                || settings.type == 'DELETE') {
+                if (!(/^http:.*/.test(settings.url) || /^https:.*/
+                    .test(settings.url))) {
+                    // Only send the token to relative URLs i.e. locally.
+                    xhr.setRequestHeader("X-XSRF-TOKEN",
+                        Cookies.get('XSRF-TOKEN'));
                 }
             }
-        });
+        }
+    });
 
-        $.get("/error", function(data) {
-            if (data) {
-                $(".error").html(data);
-            } else {
-                $(".error").html('');
-            }
-        });
-    </script>
+    $.get("/error", function (data) {
+        if (data) {
+            $(".error").html(data);
+        } else {
+            $(".error").html('');
+        }
+    });
+</script>
 </body>
 </html>
